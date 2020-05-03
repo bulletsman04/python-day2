@@ -1,0 +1,6 @@
+Include/
+Lib/
+Scripts/
+LICENSE.md
+pyvenv.cfg
+__pycache__/task1.cpython-38.pyc
