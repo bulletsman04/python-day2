@@ -23,10 +23,10 @@ async def getTracks(page: int = 0, per_page: int = 10):
 @app.get('/tracks/composers')
 async def getTracksOfComposer(composer_name: str):
     app.db_connection.row_factory = lambda cursor, x: x[0]
-    tracks = app.db_connection.execute("SELECT name FROM tracks WHERE Composer LIKE ? OR Composer LIKE ? OR Composer = ?", (f'%{composer_name},%',f'%, {composer_name}%', composer_name, )).fetchall()
+    tracks = app.db_connection.execute("SELECT name FROM tracks WHERE Composer LIKE ? OR Composer LIKE ? OR Composer = ? ORDER BY name ASC", (f'%{composer_name},%',f'%, {composer_name}%', composer_name, )).fetchall()
     
     if len(tracks) == 0:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail={"error":"Not found"})
     
     return tracks
 
