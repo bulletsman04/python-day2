@@ -1,15 +1,23 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+import sqlite3
 
 app = FastAPI()
 
-@app.get('/')
-def hello_world():
-    return {"msg": "Hello world"}
+@app.on_event("startup")
+async def startup():
+    app.db_connection = sqlite3.connect('chinook.db')
 
-class HelloNameResp(BaseModel):
-    msg: str
 
-@app.get('/hello/{name}', response_model=HelloNameResp)
-def hello_name(name: str):
-    return HelloNameResp(msg=f"Hello {name}")
+@app.on_event("shutdown")
+async def shutdown():
+    app.db_connection.close()
+
+
+@app.get('/tracks')
+async def getTracks(page: int = 0, per_page: int = 10):
+    app.db_connection.row_factory = sqlite3.Row
+    tracks = app.db_connection.execute("SELECT * FROM tracks").fetchall()
+    result = tracks[page*per_page:((page+1)*per_page-1)]
+    return result
+
+
