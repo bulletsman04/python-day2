@@ -9,6 +9,15 @@ class AlbumRequest(BaseModel):
     title: str
     artist_id: str
 
+class CustomersRequest(BaseModel):
+    company: str = None
+    address: str = None
+    city: str = None
+    state: str = None
+    country: str = None
+    postalcode: str = None
+    fax: str = None
+
 @app.on_event("startup")
 async def startup():
     app.db_connection = sqlite3.connect('chinook.db')
@@ -37,7 +46,7 @@ async def getTracksOfComposer(composer_name: str):
     return tracks
 
 @app.post('/albums')
-async def getTracks(req: AlbumRequest):
+async def putAlbum(req: AlbumRequest):
     app.db_connection.row_factory = lambda cursor, x: x[0]
     artist_exists = app.db_connection.execute("SELECT count() FROM artists WHERE ArtistId = ?", (req.artist_id,)).fetchone() == 1
     
@@ -59,10 +68,34 @@ async def getTracks(req: AlbumRequest):
 
 
 @app.get('/albums/{album_id}')
-async def getTracks(album_id: int):
+async def getAlbum(album_id: int):
     app.db_connection.row_factory = sqlite3.Row
     album = app.db_connection.execute("SELECT * FROM albums WHERE AlbumId = ?", (album_id ,)).fetchone()
     if album == None:
         raise HTTPException(status_code=404, detail={"error":"Not found"})
     return album
 
+@app.put('/customers/{customer_id}')
+async def putCustomer(customer_id: int, req: CustomersRequest):
+    app.db_connection.row_factory = lambda cursor, x: x[0]
+    customer_exists = app.db_connection.execute("SELECT count() FROM customers WHERE CustomerId = ?", (customer_id,)).fetchone() == 1
+
+    if customer_exists == False:
+        raise HTTPException(status_code=404, detail={"error":"Not found"})
+    
+    reqKeys = dict(req).keys()
+    
+    for key in reqKeys:
+        if dict(req)[key] == None:
+            continue
+        cursor = app.db_connection.execute(
+        f"UPDATE customers SET {key} = ? WHERE CustomerId = ?", (dict(req)[key], customer_id)
+        )
+        app.db_connection.commit()
+
+    app.db_connection.row_factory = sqlite3.Row
+    artist = app.db_connection.execute(
+            """SELECT *
+            FROM customers WHERE CustomerId = ?""",
+            (customer_id, )).fetchone()
+    return JSONResponse(content=dict(artist), status_code=200)
