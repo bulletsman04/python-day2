@@ -20,4 +20,10 @@ async def getTracks(page: int = 0, per_page: int = 10):
     result = tracks[page*per_page:((page+1)*per_page)]
     return result
 
+@app.get('/tracks/composers')
+async def getTracksOfComposer(composer_name: str):
+    app.db_connection.row_factory = lambda cursor, x: x[0]
+    tracks = app.db_connection.execute("SELECT name FROM tracks WHERE Composer LIKE ? OR Composer LIKE ?", (f'%{composer_name},%',f'%, {composer_name}%',)).fetchall()
+    return tracks
+
 
