@@ -17,7 +17,7 @@ async def shutdown():
 async def getTracks(page: int = 0, per_page: int = 10):
     app.db_connection.row_factory = sqlite3.Row
     tracks = app.db_connection.execute("SELECT * FROM tracks").fetchall()
-    result = tracks[page*per_page:((page+1)*per_page-1)]
+    result = tracks[page*per_page:((page+1)*per_page)]
     return result
 
 
